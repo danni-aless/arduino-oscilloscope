@@ -1,8 +1,8 @@
+#include <stdint.h>
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include "uart.h"
 
-#define BAUD 19600
+#define BAUD 19200
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 // REGISTRI UTILI
@@ -24,7 +24,7 @@ void UART_init(void) {
     // Imposta il baud rate
     UBRR0H = (uint8_t)(MYUBRR >> 8);
     UBRR0L = (uint8_t)MYUBRR;
-    // 8-bit data
+    // Asynchronous USART, parity mode disabled, 1 stop bit, 8-bit data
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
     // Abilita interrupt su RXC0 e abilita l'USART Receiver e Transmitter
     UCSR0B = (1 << RXCIE0) | (1 << RXEN0) | (1 << TXEN0);
