@@ -1,9 +1,7 @@
 #include <stdint.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include "uart.h"
-
-#define BAUD 19200
-#define MYUBRR (F_CPU/16/BAUD - 1)
 
 // REGISTRI UTILI
 // n = 0,1,2,3 (four USARTs)
@@ -28,6 +26,10 @@ void UART_init(void) {
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
     // Abilita interrupt su RXC0 e abilita l'USART Receiver e Transmitter
     UCSR0B = (1 << RXCIE0) | (1 << RXEN0) | (1 << TXEN0);
+}
+
+ISR(USART0_RX_vect) {
+    usart_int_occurred = 1; // uso una flag così non uso la UART direttamente nella ISR
 }
 
 uint8_t UART_getChar(void) {

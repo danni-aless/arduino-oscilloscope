@@ -14,10 +14,10 @@ BINS = main_arduino.elf
 
 # put here the additional .o files you want to generate
 # one .c file for each .o should be present
-OBJS = uart.o adc.o
+OBJS = uart.o timer.o adc.o
 
 # put here the additional header files needed for compilation
-HEADERS = uart.h adc.h
+HEADERS = uart.h timer.h adc.h
 
 # the code below contains the actual rules
 INCLUDE_DIRS=-I.
