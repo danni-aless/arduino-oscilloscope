@@ -33,11 +33,12 @@ ISR(TIMER1_COMPB_vect) {
     // non serve chiamare ADC_read perché c'è l'auto triggering
 }
 
-void timer_changeSamplingFreq(uint16_t freq) {
+void timer_updateSamplingFreq(uint16_t freq) {
     // controlli per limitare la frequenza in ingresso
     if(freq < 1)
         freq = 1;
     if(freq > 31250)
         freq = 31250;
-    OCR1A = OCR1B = F_CPU / 64 / (total_channels*freq);
+    sampling_freq = freq;
+    OCR1A = OCR1B = F_CPU / 64 / (total_channels*sampling_freq);
 }

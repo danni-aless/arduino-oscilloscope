@@ -22,7 +22,7 @@
 
 void ADC_init(void) {
     // Riferimento AVcc=5V, right-adjusted result, default input ADC0 
-    ADMUX = 1 << REFS0;
+    ADMUX = 1 << REFS0 | next_channel;
     // Abilitato l'auto triggering e l'interrupt di terminata conversione
     ADCSRA = 1 << ADATE | 1 << ADIE;
     // Abilitato l'ADC e il prescaling a 2: (16MHz/64)/2 = 125kHz
@@ -32,15 +32,8 @@ void ADC_init(void) {
 }
 
 ISR(ADC_vect) {
-    adc_int_occurred = 1;
     current_value = ADCL + (ADCH << 8);
-    current_channel = (current_channel+1)%total_channels;
-    //ADMUX = 1 << REFS0 | current_channel;
-}
-
-uint16_t ADC_read(uint8_t channel) {
-    ADMUX = 1 << REFS0 | channel;
-    ADCSRA |= 1 << ADSC;
-    while(ADCSRA & (1 << ADSC)); // busy waiting, vedere se si può implementare con interrupt
-    return ADCL + (ADCH << 8);
+    next_channel = (next_channel+1)%total_channels;
+    ADMUX = 1 << REFS0 | next_channel;
+    adc_int_occurred = 1;
 }

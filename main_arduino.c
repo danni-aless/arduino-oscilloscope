@@ -1,4 +1,4 @@
-#include <stdio.h> //snprintf
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <avr/io.h>
@@ -13,13 +13,18 @@
 uint8_t buf[MAX_BUF];
 
 const uint8_t total_channels = 8;
+uint8_t active_channels = 0; // bitmask
 uint16_t sampling_freq = 1;
 
 volatile uint8_t usart_int_occurred = 0;
 volatile uint8_t adc_int_occurred = 0;
-
-volatile uint8_t current_channel = 0;
+volatile uint8_t next_channel = 0;
 volatile uint16_t current_value = 0;
+
+void stampaErrore(void) {
+    snprintf((char *)buf, MAX_BUF, "Invalid command\n");
+    UART_putString(buf);
+}
 
 int main(void) {
     UART_init();
@@ -27,19 +32,23 @@ int main(void) {
     ADC_init();
     sei();
     UART_putString((uint8_t*)"Initialization done!\n");
-    UART_putString((uint8_t *)"Write which channel to print (0:8)\n");
     while(1) {
         if(usart_int_occurred) {
             UART_getString(buf);
-            uint8_t channel_to_read = strtol((const char *)buf, (char **)NULL, 10);
-            uint16_t value = ADC_read(channel_to_read);
-            snprintf((char *)buf, MAX_BUF, "%d\n", value);
-            UART_putString(buf);
+            if(buf[0]=='c') { 
+                active_channels = buf[1];
+            } else if(buf[0]=='f') {
+                timer_updateSamplingFreq(strtol((const char *)buf+1, (char **)NULL, 10));
+            } else {
+                stampaErrore();
+            }
             usart_int_occurred = 0;
         }
         if(adc_int_occurred) {
-            snprintf((char *)buf, MAX_BUF, "%d\n", current_value);
-            UART_putString(buf);
+            if(active_channels & (1 << ((next_channel-1)&7))) {
+                snprintf((char *)buf, MAX_BUF, "c%d=%d\n", (next_channel-1)&7, current_value);
+                UART_putString(buf);
+            }
             adc_int_occurred = 0;
         }
         //set_sleep_mode(SLEEP_MODE_IDLE);

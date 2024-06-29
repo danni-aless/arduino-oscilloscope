@@ -58,6 +58,7 @@ uint8_t UART_getString(uint8_t *buf) {
         // leggere \n o \r fa terminare la stringa forzatamente
         if(c == '\n' || c == '\r') {
             *buf = 0;
+            ++buf;
             return buf - b0;
         }
     }
