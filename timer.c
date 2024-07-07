@@ -37,8 +37,8 @@ void timer_updateSamplingFreq(uint16_t freq) {
     // controlli per limitare la frequenza in ingresso
     if(freq < 1)
         freq = 1;
-    if(freq > 31250)
-        freq = 31250;
+    if(freq > 625)
+        freq = 625;
     sampling_freq = freq;
     OCR1A = OCR1B = F_CPU / 64 / (total_channels*sampling_freq);
 }

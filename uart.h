@@ -1,6 +1,7 @@
 #pragma once
 
-#define BAUD 19200
+//#define BAUD 19200
+#define BAUD 500000
 #define MYUBRR (F_CPU/16/BAUD - 1)
 
 void UART_init(void);
