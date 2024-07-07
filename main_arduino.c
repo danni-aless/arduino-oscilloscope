@@ -22,7 +22,7 @@ volatile uint8_t next_channel = 0;
 volatile uint16_t current_value = 0;
 
 void stampaErrore(void) {
-    snprintf((char *)buf, MAX_BUF, "Invalid command\n");
+    snprintf((char *)buf, MAX_BUF, "dInvalid command\n");
     UART_putString(buf);
 }
 
@@ -31,7 +31,7 @@ int main(void) {
     timer_init();
     ADC_init();
     sei();
-    UART_putString((uint8_t*)"Initialization done!\n");
+    UART_putString((uint8_t*)"dInitialization done!\n");
     while(1) {
         if(usart_int_occurred) {
             UART_getString(buf);
@@ -39,6 +39,9 @@ int main(void) {
                 active_channels = buf[1];
             } else if(buf[0]=='f') {
                 timer_updateSamplingFreq(strtol((const char *)buf+1, (char **)NULL, 10));
+            } else if(buf[0]=='e' && buf[1]=='n' && buf[2]=='d' && buf[3]=='\n') {
+                active_channels = 0;
+                UART_putString((uint8_t *)"end\n");
             } else {
                 stampaErrore();
             }
@@ -46,8 +49,13 @@ int main(void) {
         }
         if(adc_int_occurred) {
             if(active_channels & (1 << ((next_channel-1)&7))) {
-                snprintf((char *)buf, MAX_BUF, "c%d=%d\n", (next_channel-1)&7, current_value);
-                UART_putString(buf);
+                /*snprintf((char *)buf, MAX_BUF, "c%d=%d\n", (next_channel-1)&7, current_value);
+                UART_putString((uint8_t *)buf);*/
+                UART_putChar((uint8_t)'c');
+                UART_putChar((uint8_t)((next_channel-1)&7));
+                UART_putChar((uint8_t)(current_value>>8));
+                UART_putChar((uint8_t)current_value);
+                UART_putChar((uint8_t)'\n');
             }
             adc_int_occurred = 0;
         }
