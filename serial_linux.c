@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -18,7 +17,7 @@ int serial_open(const char *name) {
     return fd;
 }
 
-//! sets the attributes
+// sets the attributes
 int serial_set_interface_attribs(int fd, int speed, int parity) {
     struct termios tty;
     memset(&tty, 0, sizeof tty);
@@ -67,7 +66,7 @@ int serial_set_interface_attribs(int fd, int speed, int parity) {
     return 0;
 }
 
-//! puts the port in blocking/nonblocking mode
+// puts the port in blocking/nonblocking mode
 void serial_set_blocking(int fd, int should_block) {
     struct termios tty;
     memset(&tty, 0, sizeof tty);

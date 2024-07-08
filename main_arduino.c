@@ -11,8 +11,10 @@
 
 #define MAX_BUF 256
 uint8_t buf[MAX_BUF];
+uint8_t first_byte, second_byte;
 
 const uint8_t total_channels = 8;
+uint8_t current_channel = 0;
 uint8_t active_channels = 0; // bitmask
 uint16_t sampling_freq = 1;
 
@@ -21,17 +23,15 @@ volatile uint8_t adc_int_occurred = 0;
 volatile uint8_t next_channel = 0;
 volatile uint16_t current_value = 0;
 
-void stampaErrore(void) {
-    snprintf((char *)buf, MAX_BUF, "dInvalid command\n");
-    UART_putString(buf);
-}
-
 int main(void) {
     UART_init();
     timer_init();
     ADC_init();
     sei();
-    UART_putString((uint8_t*)"dInitialization done!\n");
+    first_byte = 6<<5; // 6 -> message command
+    second_byte = 0; // 0 -> initialization message
+    UART_putChar(first_byte);
+    UART_putChar(second_byte);
     while(1) {
         if(usart_int_occurred) {
             UART_getString(buf);
@@ -41,21 +41,25 @@ int main(void) {
                 timer_updateSamplingFreq(strtol((const char *)buf+1, (char **)NULL, 10));
             } else if(buf[0]=='e' && buf[1]=='n' && buf[2]=='d' && buf[3]=='\n') {
                 active_channels = 0;
-                UART_putString((uint8_t *)"end\n");
+                first_byte = 7<<5; // 7 -> end command
+                second_byte = 0;
+                UART_putChar(first_byte);
+                UART_putChar(second_byte);
             } else {
-                stampaErrore();
+                first_byte = 6<<5; // 6 -> message command
+                second_byte = 1; // 1 -> invalid command message
+                UART_putChar(first_byte);
+                UART_putChar(second_byte);
             }
             usart_int_occurred = 0;
         }
         if(adc_int_occurred) {
-            if(active_channels & (1 << ((next_channel-1)&7))) {
-                /*snprintf((char *)buf, MAX_BUF, "c%d=%d\n", (next_channel-1)&7, current_value);
-                UART_putString((uint8_t *)buf);*/
-                UART_putChar((uint8_t)'c');
-                UART_putChar((uint8_t)((next_channel-1)&7));
-                UART_putChar((uint8_t)(current_value>>8));
-                UART_putChar((uint8_t)current_value);
-                UART_putChar((uint8_t)'\n');
+            current_channel = (next_channel-1)&7;
+            if(active_channels & (1 << current_channel)) {
+                first_byte = (current_channel<<2) | (current_value>>8);
+                second_byte = current_value;
+                UART_putChar(first_byte);
+                UART_putChar(second_byte);
             }
             adc_int_occurred = 0;
         }
