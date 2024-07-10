@@ -14,7 +14,9 @@ uint8_t data[MAX_BUF]; // data received by oscilloscope
 
 const char* message_array[] = { 
     "Oscilloscope initialization completed!\n", 
-    "Invalid command\n"
+    "Invalid command\n",
+    "Channels updated\n",
+    "Frequency updated\n"
 };
 
 char mode = 'c'; // (c)ontinuous or (b)uffered
@@ -61,7 +63,8 @@ void receiveData() {
                     for(int i=0; i<8; i++)
                         close(fd_output[i]);
                     close(fd_serial);
-                    printf("Communication ended. Press Enter or Ctrl+C to close the program.\n");
+                    printf("[ARDUINO] Communication ended\n");
+                    printf("Press Enter or Ctrl+C to close the program\n");
                     exit(EXIT_SUCCESS);
                 }
                 i += 2;
@@ -125,7 +128,6 @@ void menuOptions() {
                 buf[1] = newMask(channel, op);
                 buf[2] = '\n';
                 sendData(buf, 3);
-                printf("Channels updated\n");
             } else {
                 printf("%s", message_array[1]);
             }
@@ -140,7 +142,6 @@ void menuOptions() {
                 buf[1] = sampling_freq>>8;
                 buf[2] = sampling_freq&255;
                 sendData(buf, 3);
-                printf("Frequency updated\n");
             } else {
                 printf("%s", message_array[1]);
             }
@@ -189,6 +190,8 @@ int main(int argc, char const *argv[]) {
     }
     else // parent process
     {
+        for(int i=0; i<8; i++)
+            close(fd_output[i]);
         menuOptions();
     }
     getchar(); // needed to block process for displaying child message

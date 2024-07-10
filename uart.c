@@ -87,3 +87,8 @@ uint8_t UART_getCommand(uint8_t *buf) {
     }
     return buf - b0;
 }
+
+void UART_sendCommand(uint8_t first_byte, uint8_t second_byte) {
+    UART_putChar(first_byte);
+    UART_putChar(second_byte);
+}

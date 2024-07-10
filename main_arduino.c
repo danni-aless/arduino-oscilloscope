@@ -11,7 +11,6 @@
 
 #define MAX_BUF 256
 uint8_t buf[MAX_BUF];
-uint8_t first_byte, second_byte;
 
 const uint8_t total_channels = 8;
 uint8_t current_channel = 0;
@@ -28,38 +27,30 @@ int main(void) {
     timer_init();
     ADC_init();
     sei();
-    first_byte = 6<<5; // 6 -> message command
-    second_byte = 0; // 0 -> initialization message
-    UART_putChar(first_byte);
-    UART_putChar(second_byte);
+    UART_sendCommand(6<<5, 0); // 6.0 -> initialization message
     while(1) {
         if(usart_int_occurred) {
             UART_getCommand(buf);
             if(buf[0]=='c' || buf[0]=='b') { 
                 active_channels = buf[1];
+                UART_sendCommand(6<<5, 2); // 6.2 -> channels updated message
             } else if(buf[0]=='f') {
                 timer_updateSamplingFreq((buf[1] << 8) + buf[2]);
+                UART_sendCommand(6<<5, 3); // 6.3 -> frequency updated message
             } else if(buf[0]=='e' && buf[1]=='n' && buf[2]=='d') {
                 active_channels = 0;
-                first_byte = 7<<5; // 7 -> end command
-                second_byte = 0;
-                UART_putChar(first_byte);
-                UART_putChar(second_byte);
+                UART_sendCommand(7<<5, 0); // 7.0 -> end command
             } else {
-                first_byte = 6<<5; // 6 -> message command
-                second_byte = 1; // 1 -> invalid command message
-                UART_putChar(first_byte);
-                UART_putChar(second_byte);
+                UART_sendCommand(6<<5, 1); // 6.1 -> invalid command message
             }
             usart_int_occurred = 0;
         }
         if(adc_int_occurred) {
             current_channel = (next_channel-1)&7;
             if(active_channels & (1 << current_channel)) {
-                first_byte = (current_channel<<2) | (current_value>>8);
-                second_byte = current_value;
-                UART_putChar(first_byte);
-                UART_putChar(second_byte);
+                uint8_t first_byte = (0<<5) | (current_channel<<2) | (current_value>>8);
+                uint8_t second_byte = current_value;
+                UART_sendCommand(first_byte, second_byte); // 0 -> sampling command
             }
             adc_int_occurred = 0;
         }
