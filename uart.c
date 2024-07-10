@@ -32,6 +32,13 @@ ISR(USART0_RX_vect) {
     usart_int_occurred = 1; // uso una flag così non uso la UART direttamente nella ISR
 }
 
+uint8_t UART_hasChar(void) {
+    uint8_t c = 0;
+    if(UCSR0A & (1<<RXC0))
+        c = 1;
+    return c;
+}
+
 uint8_t UART_getChar(void) {
     // Aspetta l'arrivo di nuovi dati
     while(!(UCSR0A & (1 << RXC0)));
@@ -69,4 +76,14 @@ void UART_putString(uint8_t *buf) {
         UART_putChar(*buf);
         ++buf;
     }
+}
+
+// può essere migliorata per inserimento comandi multipli
+uint8_t UART_getCommand(uint8_t *buf) {
+    uint8_t *b0 = buf;
+    while(buf-b0 < 3) {
+        *buf = UART_getChar();
+        ++buf;
+    }
+    return buf - b0;
 }

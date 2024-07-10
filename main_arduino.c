@@ -34,12 +34,12 @@ int main(void) {
     UART_putChar(second_byte);
     while(1) {
         if(usart_int_occurred) {
-            UART_getString(buf);
-            if(buf[0]=='c') { 
+            UART_getCommand(buf);
+            if(buf[0]=='c' || buf[0]=='b') { 
                 active_channels = buf[1];
             } else if(buf[0]=='f') {
-                timer_updateSamplingFreq(strtol((const char *)buf+1, (char **)NULL, 10));
-            } else if(buf[0]=='e' && buf[1]=='n' && buf[2]=='d' && buf[3]=='\n') {
+                timer_updateSamplingFreq((buf[1] << 8) + buf[2]);
+            } else if(buf[0]=='e' && buf[1]=='n' && buf[2]=='d') {
                 active_channels = 0;
                 first_byte = 7<<5; // 7 -> end command
                 second_byte = 0;
