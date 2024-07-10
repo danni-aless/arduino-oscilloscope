@@ -21,7 +21,7 @@ const char* message_array[] = {
 
 char mode = 'c'; // (c)ontinuous or (b)uffered
 uint8_t active_channels = 0;
-uint16_t sampling_freq = 1;
+uint16_t sampling_freq = 50;
 
 int fd_output[8]; // file descriptors for output txt
 int fd_serial; // file descriptor for serial port
@@ -94,6 +94,22 @@ void sendData(char *data_to_send, int len) {
     }
 }
 
+void plotChannel(int channel) {
+    pid_t pid = fork();
+    if(pid == -1) {
+        perror("fork error");
+    }
+    else if(pid == 0) // child process
+    {
+        snprintf(buf, MAX_BUF, "%d", channel);
+        char* argument_list[] = {"gnuplot", "-s", "-c", "./graph.plt", buf, NULL};
+        int ret = execvp("gnuplot", argument_list);
+        if(ret == -1) {
+            perror("exec error");
+        }
+    }
+}
+
 void menuOptions() {
     int op;
     printf("\nWelcome! Here you can select the mode, active channels, and frequency.\n");
@@ -128,6 +144,8 @@ void menuOptions() {
                 buf[1] = newMask(channel, op);
                 buf[2] = '\n';
                 sendData(buf, 3);
+                if(op=='a')
+                    plotChannel(channel);
             } else {
                 printf("%s", message_array[1]);
             }
@@ -170,6 +188,13 @@ int main(int argc, char const *argv[]) {
         fd_output[i] = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0600);
         if(fd_output[i]<0) {
             perror("open error");
+        }
+    }
+    snprintf(buf, MAX_BUF, "0\n");
+    for(int i=0; i<8; i++) {
+        bytes_sent = write(fd_output[i], buf, 2);
+        if(bytes_sent < 0) {
+            perror("write error");
         }
     }
     printf("Output files configuration completed!\n");

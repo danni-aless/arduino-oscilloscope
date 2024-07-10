@@ -15,7 +15,7 @@ uint8_t buf[MAX_BUF];
 const uint8_t total_channels = 8;
 uint8_t current_channel = 0;
 uint8_t active_channels = 0; // bitmask
-uint16_t sampling_freq = 1;
+uint16_t sampling_freq = 50;
 
 volatile uint8_t usart_int_occurred = 0;
 volatile uint8_t adc_int_occurred = 0;
