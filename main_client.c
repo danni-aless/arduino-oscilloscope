@@ -38,7 +38,7 @@ void receiveData() {
             //printf("%d\n", bytes_read);
             while(i<bytes_read) {
                 uint8_t op = (data[i] & 0b11100000) >> 5; // extracting operation type
-                if(op==0) // continuous sampling
+                if(op==0) // sampling
                 {
                     // ooocccvv|vvvvvvvv (o=op, c=channel, v=value)
                     uint8_t channel = (data[i] & 0b00011100) >> 2;
@@ -219,6 +219,7 @@ int main(int argc, char const *argv[]) {
             close(fd_output[i]);
         menuOptions();
     }
+    close(fd_serial);
     getchar(); // needed to block process for displaying child message
     printf("Terminating process...\n");
     return 0;

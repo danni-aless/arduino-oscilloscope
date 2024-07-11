@@ -17,10 +17,30 @@ uint8_t current_channel = 0;
 uint8_t active_channels = 0; // bitmask
 uint16_t sampling_freq = 50;
 
+uint8_t mode = 'c'; // (c)ontinuous or (b)uffered
+uint16_t buffered_samples[MAX_BUF*MAX_BUF];
+uint16_t buffered_index = 0;
+
 volatile uint8_t usart_int_occurred = 0;
 volatile uint8_t adc_int_occurred = 0;
 volatile uint8_t next_channel = 0;
 volatile uint16_t current_value = 0;
+
+void sendBulk() {
+    for(int i=0; i<MAX_BUF; i++) {
+        UART_sendCommand(buffered_samples[i]>>8, buffered_samples[i]&255);
+        buffered_samples[i] = 0;
+    }
+}
+
+void storeSample(uint8_t first_byte, uint8_t second_byte) {
+    buffered_samples[buffered_index] = (first_byte << 8) | second_byte;
+    buffered_index++;
+    if(buffered_index>=MAX_BUF) {
+        sendBulk();
+        buffered_index = 0;
+    }
+}
 
 int main(void) {
     UART_init();
@@ -32,6 +52,7 @@ int main(void) {
         if(usart_int_occurred) {
             UART_getCommand(buf);
             if(buf[0]=='c' || buf[0]=='b') { 
+                mode = buf[0];
                 active_channels = buf[1];
                 UART_sendCommand(6<<5, 2); // 6.2 -> channels updated message
             } else if(buf[0]=='f') {
@@ -50,7 +71,10 @@ int main(void) {
             if(active_channels & (1 << current_channel)) {
                 uint8_t first_byte = (0<<5) | (current_channel<<2) | (current_value>>8);
                 uint8_t second_byte = current_value;
-                UART_sendCommand(first_byte, second_byte); // 0 -> sampling command
+                if(mode=='c') // continuous mode -> send the sample immediately
+                    UART_sendCommand(first_byte, second_byte); // 0 -> sampling command
+                else if(mode=='b') // buffered mode -> store the sample locally
+                    storeSample(first_byte, second_byte);
             }
             adc_int_occurred = 0;
         }
