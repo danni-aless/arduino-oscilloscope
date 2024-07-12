@@ -18,7 +18,7 @@ uint8_t active_channels = 0; // bitmask
 uint16_t sampling_freq = 50;
 
 uint8_t mode = 'c'; // (c)ontinuous or (b)uffered
-uint16_t buffered_samples[MAX_BUF*MAX_BUF];
+uint16_t buffered_samples[MAX_BUF];
 uint16_t buffered_index = 0;
 
 volatile uint8_t usart_int_occurred = 0;
@@ -26,7 +26,7 @@ volatile uint8_t adc_int_occurred = 0;
 volatile uint8_t next_channel = 0;
 volatile uint16_t current_value = 0;
 
-void sendBulk() {
+void sendBulk(void) {
     for(int i=0; i<MAX_BUF; i++) {
         UART_sendCommand(buffered_samples[i]>>8, buffered_samples[i]&255);
         buffered_samples[i] = 0;

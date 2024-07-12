@@ -27,7 +27,7 @@ int fd_output[8]; // file descriptors for output txt
 int fd_serial; // file descriptor for serial port
 int bytes_read, bytes_sent;
 
-void receiveData() {
+void receiveData(void) {
     while(1) {
         bytes_read = read(fd_serial, data, MAX_BUF);
         if(bytes_read%2) // bytes_read has to be even, otherwise add one byte
@@ -110,7 +110,7 @@ void plotChannel(int channel) {
     }
 }
 
-void menuOptions() {
+void menuOptions(void) {
     int op;
     printf("\nWelcome! Here you can select the mode, active channels, and frequency.\n");
     printf("[m]ode (continuous or buffered)\n");

@@ -1,5 +1,5 @@
 CC=gcc
-CC_OPTS=-O3 -Wall --std=gnu99
+CC_OPTS=-O3 -Wall -Wstrict-prototypes -std=gnu99
 BINS=main_client.elf
 OBJS=serial_linux.o
 

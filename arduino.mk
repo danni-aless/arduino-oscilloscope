@@ -54,8 +54,8 @@ ifeq ($(TARGET), uno)
     AVRDUDE_BOOTLOADER = arduino
 endif
 
-CC_OPTS=$(CC_OPTS_GLOBAL) --std=gnu99 
-CXX_OPTS=$(CC_OPTS_GLOBAL) --std=c++17 
+CC_OPTS=$(CC_OPTS_GLOBAL) -std=gnu99 
+CXX_OPTS=$(CC_OPTS_GLOBAL) -std=c++17 
 AS_OPTS=-x assembler-with-cpp $(CC_OPTS)
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET):i
