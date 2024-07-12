@@ -15,13 +15,14 @@ uint8_t data[MAX_BUF]; // data received by oscilloscope
 const char* message_array[] = { 
     "Oscilloscope initialization completed!\n", 
     "Invalid command\n",
+    "Mode updated\n",
     "Channels updated\n",
     "Frequency updated\n"
 };
 
 char mode = 'c'; // (c)ontinuous or (b)uffered
 uint8_t active_channels = 0;
-uint16_t sampling_freq = 50;
+//uint16_t sampling_freq = 50;
 
 int fd_output[8]; // file descriptors for output txt
 int fd_serial; // file descriptor for serial port
@@ -117,6 +118,7 @@ void menuOptions(void) {
     printf("[a]ctivate channel (up to 8 channels)\n");
     printf("[d]eactivate channel\n");
     printf("[f]requency (from 1 Hz to 625 Hz)\n");
+    printf("[p]lot channel (press q to close the oscilloscope)\n");
     printf("[e]nd communication and close program\n");
     printf("\n");
     while(1) {
@@ -128,39 +130,57 @@ void menuOptions(void) {
             while((op = getchar()) == '\n');
             if(op=='c' || op=='b') {
                 mode = (char)op;
-                printf("Mode updated\n");
+                buf[0] = 'm';
+                buf[1] = mode;
+                buf[2] = '\n';
+                sendData(buf, 3);
             } else {
+                while((op = getchar()) != '\n');
                 printf("%s", message_array[1]);
             }
         } else if(op=='a' || op=='d') {
-            int channel;
+            int channel = -1;
             printf("Choosing the channel: 0 to 7\n");
             printf("> ");
             if(scanf("%d", &channel)==EOF) {
                 perror("scanf error");
             }
             if(channel>=0 && channel<8) {
-                buf[0] = mode;
+                buf[0] = 'c';
                 buf[1] = newMask(channel, op);
                 buf[2] = '\n';
                 sendData(buf, 3);
-                if(op=='a')
-                    plotChannel(channel);
             } else {
+                while((op = getchar()) != '\n');
                 printf("%s", message_array[1]);
             }
         } else if(op=='f') {
+            int sampling_freq = 0;
             printf("Choosing the frequency: 1 to 625 (Hz)\n");
             printf("> ");
-            if(scanf("%hu", &sampling_freq)==EOF) {
+            if(scanf("%d", &sampling_freq)==EOF) {
                 perror("scanf error");
             }
             if(sampling_freq>=1 && sampling_freq<=625) {
-                buf[0] = op;
+                buf[0] = 'f';
                 buf[1] = sampling_freq>>8;
                 buf[2] = sampling_freq&255;
                 sendData(buf, 3);
             } else {
+                while((op = getchar()) != '\n');
+                printf("%s", message_array[1]);
+            }
+        } else if(op=='p') {
+            int channel = -1;
+            printf("Choosing the channel: 0 to 7\n");
+            printf("> ");
+            if(scanf("%d", &channel)==EOF) {
+                perror("scanf error");
+            }
+            if(channel>=0 && channel<8) {
+                plotChannel(channel);
+            } else {
+                while((op = getchar()) != '\n');
                 printf("%s", message_array[1]);
             }
         } else if(op=='e') {
