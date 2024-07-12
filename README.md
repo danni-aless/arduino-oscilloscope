@@ -6,4 +6,4 @@ Arduino Oscilloscope project for SO course
 
 2. Upload the file to Arduino with ```make main_arduino.hex```
 
-3. Run the program with ```./main_client.elf <serial_file> <baudrate>```<br>(baudrate must be 5000000)
+3. Run the program with ```./main_client.elf <serial_file> <baudrate>``` (baudrate must be 500000)
