@@ -9,12 +9,15 @@
 #include "timer.h"
 #include "adc.h"
 
+#define TRIGGER_HIGH 1000
+#define TRIGGER_LOW 20
 #define MAX_BUF 256
 uint8_t buf[MAX_BUF];
 
 const uint8_t total_channels = 8;
 uint8_t current_channel = 0;
 uint8_t active_channels = 0; // bitmask
+uint8_t triggered_channels = 0; // bitmask
 uint16_t sampling_freq = 50;
 
 uint8_t mode = 'c'; // (c)ontinuous or (b)uffered
@@ -73,10 +76,26 @@ int main(void) {
         }
         if(adc_int_occurred) {
             current_channel = (next_channel-1)&7;
+            if(!(active_channels & (1 << current_channel))) {
+                if(current_value > TRIGGER_HIGH) {
+                    active_channels |= 1 << current_channel;
+                    triggered_channels |= 1 << current_channel;
+                    UART_sendCommand((1<<5) | (current_channel<<2), 1); // 1.1 -> new trigger command
+                }
+            } else if(triggered_channels & (1 << current_channel)) {
+                if(current_value < TRIGGER_LOW) {
+                    active_channels &= ~(1 << current_channel);
+                    triggered_channels &= ~(1 << current_channel);
+                    sendBulk(); // force sending bulk
+                    UART_sendCommand((1<<5) | (current_channel<<2), 0); // 1.0 -> trigger ended command
+                }
+            }
             if(active_channels & (1 << current_channel)) {
                 uint8_t first_byte = (0<<5) | (current_channel<<2) | (current_value>>8);
                 uint8_t second_byte = current_value;
-                if(mode=='c') // continuous mode -> send the sample immediately
+                if(triggered_channels & (1 << current_channel)) // a triggered channel should always work in buffered mode
+                    storeSample(first_byte, second_byte);
+                else if(mode=='c') // continuous mode -> send the sample immediately
                     UART_sendCommand(first_byte, second_byte); // 0 -> sampling command
                 else if(mode=='b') // buffered mode -> store the sample locally
                     storeSample(first_byte, second_byte);

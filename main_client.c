@@ -22,11 +22,19 @@ const char* message_array[] = {
 
 char mode = 'c'; // (c)ontinuous or (b)uffered
 uint8_t active_channels = 0;
-//uint16_t sampling_freq = 50;
 
 int fd_output[8]; // file descriptors for output txt
 int fd_serial; // file descriptor for serial port
 int bytes_read, bytes_sent;
+
+uint8_t newMask(int channel, char op) {
+    if(op=='a') {
+        active_channels |= 1 << channel;
+    } else if(op=='d') {
+        active_channels &= ~(1 << channel);
+    }
+    return active_channels;
+}
 
 void receiveData(void) {
     while(1) {
@@ -50,6 +58,19 @@ void receiveData(void) {
                         perror("write error");
                     }
                     //printf("c%u=%u\n", channel, value);
+                } else if(op==1) // trigger command
+                {
+                    // oooccc--|tttttttt (o=op, c=triggered channel, t=trigger info)
+                    uint8_t triggered_channel = (data[i] & 0b00011100) >> 2;
+                    if(data[i+1]) {
+                        newMask(triggered_channel, 'a');
+                        printf("[ARDUINO] Trigger from channel %d!\n", triggered_channel);
+                    } else {
+                        newMask(triggered_channel, 'd');
+                        printf("[ARDUINO] Trigger from channel %d ended!\n", triggered_channel);
+                    }
+                    printf("> ");
+                    fflush(stdout);
                 }
                 else if(op==6) // message
                 {
@@ -76,15 +97,6 @@ void receiveData(void) {
             printf("Nothing to read\n");
         }
     }
-}
-
-uint8_t newMask(int channel, char op) {
-    if(op=='a') {
-        active_channels |= 1 << channel;
-    } else if(op=='d') {
-        active_channels &= ~(1 << channel);
-    }
-    return active_channels;
 }
 
 void sendData(char *data_to_send, int len) {
@@ -203,6 +215,7 @@ int main(int argc, char const *argv[]) {
     int baudrate = atoi(argv[2]);
 
     // output files configuration
+    mkdir("./data", 0755);
     for(int i=0; i<8; i++) {
         snprintf(buf, MAX_BUF, "%s%d%s", "./data/analog_", i, ".txt");
         fd_output[i] = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0600);
