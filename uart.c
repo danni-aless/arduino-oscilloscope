@@ -78,7 +78,6 @@ void UART_putString(uint8_t *buf) {
     }
 }
 
-// può essere migliorata per inserimento comandi multipli
 uint8_t UART_getCommand(uint8_t *buf) {
     uint8_t *b0 = buf;
     while(buf-b0 < 3) {

@@ -102,7 +102,5 @@ int main(void) {
             }
             adc_int_occurred = 0;
         }
-        //set_sleep_mode(SLEEP_MODE_IDLE);
-        //sleep_mode();
     }
 }

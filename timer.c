@@ -30,7 +30,7 @@ void timer_init(void)
 }
 
 ISR(TIMER1_COMPB_vect) {
-    // non serve chiamare ADC_read perché c'è l'auto triggering
+    // non serve fare nulla perché c'è l'auto triggering
 }
 
 void timer_updateSamplingFreq(uint16_t freq) {

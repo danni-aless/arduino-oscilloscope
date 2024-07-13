@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -86,7 +87,6 @@ void receiveData(void) {
                         close(fd_output[i]);
                     close(fd_serial);
                     printf("[ARDUINO] Communication ended\n");
-                    printf("Press Enter or Ctrl+C to close the program\n");
                     exit(EXIT_SUCCESS);
                 }
                 i += 2;
@@ -251,9 +251,15 @@ int main(int argc, char const *argv[]) {
         for(int i=0; i<8; i++)
             close(fd_output[i]);
         menuOptions();
+        int status;
+        pid_t child_pid = waitpid(pid, &status, 0); // wait child to terminate
+        if(child_pid == -1) {
+            perror("wait error");
+        }
+        printf("Press Enter or Ctrl+C to close the program\n");
+        getchar(); // needed to block process for displaying message
+        printf("Terminating process...\n");
+        close(fd_serial);
     }
-    close(fd_serial);
-    getchar(); // needed to block process for displaying child message
-    printf("Terminating process...\n");
     return 0;
 }
