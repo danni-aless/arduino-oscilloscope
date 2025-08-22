@@ -1,5 +1,5 @@
-# SO-Oscilloscope
-Arduino Oscilloscope project for SO course
+# arduino-oscilloscope
+Arduino Oscilloscope project for "Sistemi Operativi" course (Sapienza)
 
 ### Main features
 - Oscilloscope can sample up to 8 channels on the ADC
